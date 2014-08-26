@@ -1,0 +1,22 @@
+# Git Merge conflict resolve
+#
+# Make sure you have the following in .git/config
+[remote "origin"]
+	url = git@github.com:SnapLogic/Lumberjack.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+
+
+# Step 1: Bring in the changes and test
+git fetch origin
+git checkout -b fix_parser origin/fix_parser
+
+# Step 2: Make sure the branch is up to date
+git merge master
+
+# Step 3: Merge the changes
+git checkout master
+git merge fix_parser
+### After the step above, any merge conflicts need to be resolved ###
+
+# Step 4: Update the server
+git push origin master
