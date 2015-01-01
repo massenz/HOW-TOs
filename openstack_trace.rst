@@ -4,9 +4,35 @@ Openstack Road Test
 
 :Author: Marco Massenzio
 :Created: 2014-05-20
+:Updated: 2014-10-25
 
 Configuration
 -------------
+
+Setting up VBox VMs
+^^^^^^^^^^^^^^^^^^^
+
+$ sudo vim /etc/network/interfaces
+
+iface eth1 inet static
+address 192.168.56.51
+netmask 255.255.255.0
+network 192.168.56.0
+gateway 192.168.56.1
+broadcast 192.168.56.255
+
+$ sudo vim /etc/hosts
+
+# Openstack VMs
+192.168.56.101   controller      # Openstack Controller VM
+192.168.56.102   storage         # Openstack Storage (Cinder) VM
+192.168.56.103   compute         # Openstack Compute (Nova) VM
+192.168.56.104   network         # Openstack Network (Neutron) VM
+192.168.56.100   os-template     # Openstack template
+
+
+Setup the DevStack instance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     $ cat local.conf
     # local.conf for devstack
