@@ -1,0 +1,219 @@
+#!/bin/bash
+#
+# SparkLab build script
+#
+# Created by M. Massenzio, 2015-01-22
+#
+#  ssh ubuntu@10.10.113.199
+
+echo "[INFO] This will install all binaries and libraries for the SciPy Python environment,
+[INFO] Cassandra and Spark on an AWS Ubuntu AMI instance.
+[INFO] This assumes you are running this script as described in the README documentation.
+"
+read -p "Press a key when ready or Ctrl-C to abort"
+
+sudo apt-get update && sudo apt-get -y upgrade
+
+# There are a bunch of packages that will be needed later
+# Install them all now:
+sudo apt-get install -y pkg-config gcc g++ libreadline-dev git git-sh maven
+
+# Attach EBS block device
+# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html
+lsblk
+#
+# Should emit something like the below:
+#
+#   NAME    MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+#   xvda    202:0    0     8G  0 disk
+#   └─xvda1 202:1    0     8G  0 part /
+#   xvdb    202:16   0   100G  0 disk
+echo "[INFO] The listing above should show at least an entry of the form
+    xvdb    202:16   0   100G  0 disk"
+read -p "Please enter the name of the ESB device you wish to format and mount on this instance " disk
+# Verify it's an empty, unformatted device:
+IS_EMPTY=$(sudo file -s /dev/$disk | egrep "/dev/$disk: data")
+#
+#    /dev/xvdb: data
+if [[ -z ${IS_EMPTY} ]]; then
+    sudo file -s /dev/$disk
+    echo "[WARN] it would appear that the device is already formatted, are you sure you want to progress."
+    echo "[WARN] All data on the device will be lost; you've been warned!"
+    read -p "Press a key when ready or Ctrl-C to abort"
+fi
+# Create an ext4 filesystem on it
+sudo mkfs -t ext4 /dev/$disk
+sudo mkdir /mnt/data
+
+# Add the mount point to fstab
+sudo echo "/dev/$disk   /mnt/data   ext4    defaults,auto,nofail,nobootwait 0 0" >> /etc/fstab
+sudo mount -a
+echo "[INFO] /dev/$disk should be mounted on /mnt/data"
+ll /mnt/data/
+
+### TODO ###
+# Verify all disks are properly mounted
+
+# Setup the Python environment
+#
+# Install matplotlib (pip install matplotlib will fail)
+# and the Python dev package (the headers are required by numpy and friends)
+# Make sure the python versions match the one installed
+# libzmq is required by pyzmq (or its install will fail)
+#
+echo "[INFO] Installing Python 3, virtual environment support and SciPy packages"
+read -p "Press a key when ready or Ctrl-C to abort"
+
+sudo apt-get install -y python-setuptools python3-matplotlib python3.4-dev libzmq-dev
+sudo easy_install pip
+sudo pip install virtualenvwrapper
+mkdir "${HOME}/virtualenvs"
+
+# Add the virtualenvwrapper env for .bashrc
+#
+echo "export WORKON_HOME=\"\${HOME}/virtualenvs\"
+source /usr/local/bin/virtualenvwrapper.sh" >> .bashrc
+source .bashrc
+
+# Create the virtual environment
+# The use of --system-site-packages is necessary to make matplotlib work in Python 3
+#
+mkvirtualenv -p `which python3` --system-site-packages scipy3
+
+IS_PY3=$(python --version | egrep "3\.[\d]+")
+if [[ -z "${IS_PY3}" ]]; then
+    echo "[WARN] You may not have Python 3.x enabled, double check the virtualenv"
+    echo "[WARN] Python 3 is here: [`which python3`]; your default python is: [`which python`]"
+    python --version
+fi
+
+# Add all the necessary packages (see the SparkLab-requirements.txt file)
+# NOTE - this will take a long time to run, with no output to stdout
+if [[ ! -f SparkLab-requirements.txt]]; then
+    echo "[ERROR] Missing SparkLab-requirements.txt file, please copy it to the ubuntu user home dir"
+    exit 1
+fi
+echo "[INFO] Installing SciPy packages, this will take forever: go grab a book..."
+read -p "Press a key when ready or Ctrl-C to abort"
+pip install -r SparkLab-requirements.txt
+if [[ $? != 0 ]]; then
+    echo "[ERROR] Your virtual environment may miss critical packages"
+fi
+read -p "Press a key when ready or Ctrl-C to abort"
+
+## Add Java JDK 8 & Install Cassandra
+# See: http://tecadmin.net/install-oracle-java-8-jdk-8-ubuntu-via-ppa/
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update && sudo apt-get install -y oracle-java8-installer
+
+IS_JAVA8=$(java -version 2>&1 | egrep -e "1\.8\.0_[0-9]+")
+if [[ -z ${IS_JAVA8} ]]; then
+    echo "[WARN] Your installed java may not support the latest features:"
+    java -version
+    echo "[WARN] Make sure to fix this after setup completes. This is not critical for progress"
+    read -p "Press a key when ready"
+fi
+
+## Install Cassandra
+#  See: http://www.datastax.com/documentation/cassandra/1.2/cassandra/install/installDeb_t.html
+
+# This would FAIL (with some unreasonable permission error):
+# sudo echo "deb http://debian.datastax.com/community stable main" > /etc/apt/sources.list.d/cassandra.sources.list
+#
+# We need to manually edit the file and then `sudo cp` to the correct directory:
+echo "deb http://debian.datastax.com/community stable main" > ~/cassandra.sources.list
+sudo cp cassandra.sources.list /etc/apt/sources.list.d/
+
+curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
+sudo apt-get update && sudo apt-get install -y dsc12=1.2.10-1 cassandra=1.2.10
+
+# Cassandra configuration is fiddly and does not work well with AWS EC2 instances
+#
+# 1. you need to edit the -Xss Java option (stack size)
+#    See: http://stackoverflow.com/questions/22470628/cassandrathe-stack-size-specified-is-too-small-specify-at-least-228k
+#    The only solution is to manually edit the environment settings and change the following line:
+#
+#       JVM_OPTS="$JVM_OPTS -Xss180k"
+#    to
+#       JVM_OPTS="$JVM_OPTS -Xss256k"
+#
+echo "Change the line JVM_OPTS=\"\$JVM_OPTS -Xss180k\" to a value >= 256k"
+read -p "Press a key when ready"
+sudo vim /etc/cassandra/cassandra-env.sh
+
+# 2. The host location and data directories need to be configured.
+# While you are at it, add the host IP address to the list of `seeds`
+# in /etc/cassandra/cassandra.yaml
+#
+# Look for a line that says `- seeds` and change it to something like:
+#
+#       - seeds: "10.10.113.199,10.10.113.200"
+#
+# and the directories where Cassandra should store data on disk.  Cassandra
+# will spread data evenly across them, subject to the granularity of
+# the configured compaction strategy.
+#   data_file_directories:
+#        - /data/cassandra
+#
+sudo ln -s /mnt/data /data
+sudo mkdir /data/cassandra
+sudo chmod 2775 /data
+sudo chown :users /data
+echo "Change the 'data_file_directories' to point to /data/cassandra"
+echo "and the 'seeds' to point to $HOST_IP"
+read -p "Press a key when ready"
+sudo vim /etc/cassandra/cassandra.yaml
+
+# 3. In a VPC with no public nodes, your hostname won't resolve and Cassandra
+#    will terminate the node
+#
+HOST_IP=$(ifconfig |grep -Po "(?<=inet addr:)\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"|egrep -v "127\.0\.0\.1")
+cp /etc/hosts ./
+echo "$HOST_IP  `hostname`" >> hosts
+sudo cp ./hosts /etc/
+echo "[INFO] Please verify that the last line added to your /etc/hosts file is correct"
+cat /etc/hosts
+read -p "Press a key when ready"
+
+# The above MAY fail; the alternative is to change the
+#    listen_address: 10.10.113.199
+# to whatever the IP address of the host is.
+# Verify that you can run Cassandra: the line below starts it in foreground mode (so you can see
+# the logs); then open another shell and run `cqlsh` to start a cassandra shell.
+# You will have to terminate this session via Ctrl-C
+#     sudo cassandra -f
+echo "[INFO] Cassandra installation complete, please verify you can run the server using: cassandra -f"
+read -p "Press a key when ready"
+
+## Install Apache Spark
+#  See: http://spark.apache.org/docs/1.2.0/spark-standalone.html
+#
+echo "[INFO] Installing Apache Spark"
+read -p "Press a key when ready"
+
+#
+# Ubuntu repositories only have Scala 2.9 - we need to get and install 2.11 manually
+#
+wget http://downloads.typesafe.com/scala/2.11.5/scala-2.11.5.deb
+sudo dpkg -i scala-2.11.5.deb
+rm scala*
+IS_SCALA=$(scalac -version | grep "2\.11")
+if [[ -z ${IS_SCALA} ]]; then
+    echo "[ERROR] Scala 2.11 did not get properly installed, do you wish to continue?"
+    scalac -version
+    read -p "Hit Ctrl-C to quit now"
+fi
+
+wget http://apache.petsads.us/spark/spark-1.2.0/spark-1.2.0-bin-hadoop2.4.tgz
+tar xfz spark-1.2.0-bin-hadoop2.4.tgz
+sudo mv spark-1.2.0-bin-hadoop2.4 /usr/local/
+sudo ln -snf spark-1.2.0-bin-hadoop2.4 /usr/local/spark
+echo "export SPARK_HOME=/usr/local/spark
+export PATH=\${PATH}:\${SPARK_HOME}/sbin:\${SPARK_HOME}/bin
+" >> .bashrc
+source .bashrc
+
+echo "[INFO] Apache Spark installed at ${SPARK_HOME}"
+echo "[INFO] To start Spark Master, run: sudo start-master.sh"
+echo "[SUCCESS] Done."
+

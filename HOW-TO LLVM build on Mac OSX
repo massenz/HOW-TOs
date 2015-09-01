@@ -1,0 +1,20 @@
+LLVM executables are installed in /usr/local/opt/llvm/bin.
+Extra tools are installed in /usr/local/opt/llvm/share/llvm.
+
+This formula is keg-only, which means it was not symlinked into /usr/local.
+
+Mac OS X already provides this software and installing another version in
+parallel can cause all kinds of trouble.
+
+Generally there are no consequences of this for you. If you build your
+own software and it requires this formula, you'll need to add to your
+build variables:
+
+    LDFLAGS:  -L/usr/local/opt/llvm/lib
+    CPPFLAGS: -I/usr/local/opt/llvm/include
+
+
+If you need Python to find bindings for this keg-only formula, run:
+  echo /usr/local/opt/llvm/lib/python2.7/site-packages >> /usr/local/lib/python2.7/site-packages/llvm.pth
+  mkdir -p /Users/marco/Library/Python/2.7/lib/python/site-packages
+  echo 'import site; site.addsitedir("/usr/local/lib/python2.7/site-packages")' >> /Users/marco/Library/Python/2.7/lib/python/site-packages/homebrew.pth
