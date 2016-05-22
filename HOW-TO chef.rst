@@ -58,13 +58,13 @@ An issue that crops up when cloning VMs (as in this instance) is that the MAC
 address of the NIC changes, but ``udev`` will append (instead of replacing)
 the new NIC's definition, thus causing ``eth0`` to be unrecognized.
 
-The simple solution is to completely empty `70-persistent-net.rules`` and 
+The simple solution is to completely empty ``70-persistent-net.rules`` and 
 reboot::
 
     sudo rm /etc/udev/rules.d/70-persistent-net.rules
     sudo reboot now
 
-See here_ for more details.
+See `here`_ for more details.
 
 installation
 ------------
@@ -74,7 +74,7 @@ Follow the instruction on the `installation page`_ for client and server.
 post-install
 ------------
 
-Follow the guide_ after installation to get chef up and running.
+Follow the `guide`_ after installation to get chef up and running.
 
 The Web UI should now be up and running at https://chef-server/
 (note this is different from what the book and older documentation
