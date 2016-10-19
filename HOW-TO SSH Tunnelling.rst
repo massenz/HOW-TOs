@@ -23,16 +23,6 @@ to connect (back) to mordor.
 
 ``-f``  is probably unnecessary (puts ssh immediately in the background - use ``ps ax|grep ssh`` to recover the PID and, eventually, close the tunnel).
 
-VPN Tunnelling to Google hosts
--------------------------------
-
-::
-  ssh -l mmassenzio -L 3128:cache.corp.google.com:3128 -L 7100:infinitebw.lon.corp.google.com:7100 -L 2222:infinitebw.lon.corp.google.com:22 192.168.1.8
-
-
-use NX client pointing to ``localhost:2222``
-or ssh to ``localhost:2222`` to get to ``infinitebw.lon``
-proxy to ``localhost:3128`` to access (some) internal sites
 
 Script to enable tunnelling
 ---------------------------
@@ -43,9 +33,6 @@ The following is the script I use to enable tunnelling::
     #/bin/bash
     #
     # ssh_tunnel.sh, Created by M. Massenzio, 2011-08-04
-    #
-    # Tunnel into my home machine
-    # See Documents/shared/SSH Tunnelling.txt (@mordor, for further details)
 
     echo "SSH Tunnelling to mordor via infinitebw.dyndns.org"
     ssh -fNX -p 245 -L  2110/mordor/22 admin@infinitebw.dyndns.org
