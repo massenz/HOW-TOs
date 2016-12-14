@@ -1,19 +1,23 @@
-Enable NFS Mount
-================
+# Enable NFS Mount
 
-Symptom
--------
 
-When mounting a valid share, NFS denies access::
+## Symptom
+
+
+When mounting a valid share, NFS denies access:
 
     $ mount /mnt/backup
     mount.nfs: access denied by server while mounting beregond:/share/USBDisk1
 
-Solution
---------
+Related - to unmount a stale handle:
 
-The mount point is not ``exported``.
-Find out where the mount point points to on the client side::
+    sudo umount --force -vvv -l /mnt/shared
+
+## Solution
+
+
+The mount point is not `exported`.
+Find out where the mount point points to on the client side:
 
     $ cat /etc/fstab
     # /etc/fstab: static file system information.
@@ -22,7 +26,7 @@ Find out where the mount point points to on the client side::
     beregond:/share/USBDisk1 /mnt/backup       nfs    defaults,users,noexec,noauto    0       0
 
 
-On the server side::
+On the server side:
 
     $ ssh admin@beregond
     # ll /share/USBDisk1
@@ -34,15 +38,15 @@ On the server side::
     "/share/MD0_DATA/Public" *(rw,async,no_root_squash,insecure)
     "/share/MD0_DATA/Web" *(rw,async,no_root_squash,insecure)
 
-As you can see, ``/share/external/sdt1/`` is not there, edit the file and add the line::
+As you can see, `/share/external/sdt1/` is not there, edit the file and add the line:
 
     "/share/external/sdt1" *(rw,async,no_root_squash,insecure)
 
-Then use (this is the **critical** part)::
+Then use (this is the **critical** part):
 
     [~] # exportfs -a
 
-You'll get a bunch of error messages::
+You'll get a bunch of error messages:
 
     exportfs: /etc/exports [5]: Neither 'subtree_check' or 'no_subtree_check' specified for export "*:/share/external/sdt1".
     Assuming default behaviour ('no_subtree_check').
@@ -50,7 +54,7 @@ You'll get a bunch of error messages::
 
 but that's fine, they can be ignored.
 
-Finally::
+Finally:
 
     $ mount /mnt/backup
 
