@@ -48,7 +48,7 @@ Once used, the encryption secret is itself encrypted using the generated keys::
 Now, both the archive and the encryption secret can be stored securely.
 
 **Important**
-  After encryption, **the encryption secret MUST be securely deleted**
+  After encryption, **the clear-text encryption secret MUST be securely deleted**
 
 ::
 
@@ -72,5 +72,5 @@ The advantage of using (and encrypting) a separate secret is that if, for whatev
 secret key is compromised, only the passphrase(s) need to be re-encrypted (using a newly created
 keypair) while the more expensive-to-process archives can be left alone.
 
-Obviously, keep them separate!
-(even though, the passphrase and archives could be, in principle stored alongside).
+Obviously, **keep the key material (secret key) and confidential information (encrypted archives) separate!**
+(however, the passphrase and archives could be, in principle stored alongside).
