@@ -3,8 +3,6 @@
 # Builds OpenCV
 # Based on: http://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/
 
-source /usr/local/bin/virtualenvwrapper.sh
-
 
 function usage {
     echo "Usage: $(basename $0) [VIRTUAL_ENV [VERSION [INSTALL_DIR]]]
@@ -29,6 +27,8 @@ These are the steps:
 "
 }
 
+set -eu
+
 declare -r VIRTUAL_ENV=${1:-cv3}
 declare -r VERSION=${2:-3.3.0}
 declare -r INSTALL_DIR=${3:-/usr/local}
@@ -44,8 +44,9 @@ fi
 
 set -eu
 
+# TODO: these packages appear to no longer exist: libpng12-dev, libjasper-dev
 sudo apt-get install build-essential cmake pkg-config \
-    libjpeg8-dev libtiff5-dev libjasper-dev libpng12-dev \
+    libjpeg8-dev libtiff5-dev \
     libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
     libxvidcore-dev libx264-dev \
     libgtk-3-dev \
