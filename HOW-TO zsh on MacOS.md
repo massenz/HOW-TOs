@@ -2,9 +2,15 @@
 
 ## Install
 
-See the [oh my zsh](https://github.com/robbyrussell/oh-my-zsh) repo; to install run:
+Use `brew` for the `zsh` shell:
+
+    brew update
+    brew install zsh
+
+Then, see the [oh my zsh](https://github.com/robbyrussell/oh-my-zsh) repo; to install run:
 
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
 
 ## Update the init script
 
@@ -20,6 +26,11 @@ Change this line in the `virtualenv_prompt` function:
 
 ## Adjust Terminal fonts
 
-Change terminal font to: Literation Mono Powerline 11pt
-use the `Dark Gray` terminal profile.
+Install the [Powerline fonts](https://github.com/powerline/fonts):
 
+    git clone https://github.com/powerline/fonts.git --depth=1
+    cd fonts/
+    ./install.sh 
+
+Change terminal font to one of the Powerline fonts, and, optionally,
+use the `Dark Gray` terminal profile.
