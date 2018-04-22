@@ -30,7 +30,13 @@ Install the [Powerline fonts](https://github.com/powerline/fonts):
 
     git clone https://github.com/powerline/fonts.git --depth=1
     cd fonts/
-    ./install.sh 
+    ./install.sh
 
 Change terminal font to one of the Powerline fonts, and, optionally,
 use the `Dark Gray` terminal profile.
+
+## Add link to Sublime
+
+While you're at it, you may as well add a link to Sublime Text:
+
+    ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ${USR_LOCAL}/bin/subl

@@ -1,6 +1,28 @@
 # Java 9
 
-[This video](https://www.youtube.com/watch?v=MGX-JfMl9-Y) is a simple introduction to the new Module System (aka `Jigsaw`) in Java 9.
+## Modules Videos
+
+1. [A simple introduction to the new Module System ](https://www.youtube.com/watch?v=MGX-JfMl9-Y)
+
+2. [Introduction to Java Modules](https://www.youtube.com/watch?v=2Hmrn_r-uJA)
+
+3. [Advanced Modular Development](https://www.youtube.com/watch?v=WWbw8u5jaaU)
+
+4. [Modules and Services](https://www.youtube.com/watch?v=u8Hbdo-u-88)
+
+5. [Jigsaw under the hood](https://www.youtube.com/watch?v=Vxfd3ehdAZc)
+
+6. [Migrating app to modules](https://youtu.be/M7q3C8OwJe8)
+
+
+## Other Java9 features
+
+7. [Java 9 features](https://www.youtube.com/watch?v=0RegttLUXeU)
+See the jshell.txt log
+
+8. [Java 9 enhancement to Optional](https://aboullaite.me/java-9-enhancements-optional-stream)
+
+## `Module` class
 
 There is also a new `Module` class, and modules can be introspected, just like classes do:
 
@@ -40,7 +62,6 @@ See the `java9` project and the `jj` script for details.
 
 ## Create a separate module and "import" it
 
-
 The library module:
 
     module org.openjdk.text {
@@ -57,7 +78,9 @@ imported by the application module:
 
     $ jar --file lib/org-openjdk-hello.jar --describe-module
 
-# Running both JDK 8 and 9 on Ubuntu
+# Running multiple JDKs
+
+## Running both JDK 8 and 9 on Ubuntu
 
 Following [this guide](http://www.webupd8.org/2015/02/install-oracle-java-9-in-ubuntu-linux.html):
 
@@ -79,7 +102,7 @@ To [switch between versions](https://askubuntu.com/questions/740757/switch-betwe
 
     $ sudo update-alternatives --config java
 
-## Manually setting `java`
+### Manually setting `java`
 
 Use the `update-alternatives` command (see `sudo update-alternatives --help`):
 
@@ -102,6 +125,11 @@ Use the `update-alternatives` command (see `sudo update-alternatives --help`):
     java version "1.8.0_151"
     Java(TM) SE Runtime Environment (build 1.8.0_151-b12)
     Java HotSpot(TM) 64-Bit Server VM (build 25.151-b12, mixed mode)
+
+## Running multiple JDKs on MacOS
+
+    TODO: describe the process
+
 
 # Migrating apps to Modules
 
@@ -133,3 +161,48 @@ To get started migrating an app/library, use `jdeps` to generate an initial iter
         lib/jackson-core-2.6.6.java
 
 will write out `src/jackson.core/module-info.java`.
+
+---
+# Appendix - `jshell` notes
+
+```
+
+// Immutable collections.
+List<String> strings = List.of("a", "b", "c");
+strings.stream().filter(s -> s.startsWith("a")).collect(Collectors.toList())
+
+// Completable futures for async programming.
+CompletableFuture<String> cf = new CompletableFuture<String>();
+CompletableFuture<String> copy = cf.copy();
+cf.complete("done")
+copy.get()
+
+// Java Stack processing.
+StackWalker.getInstance().walk(s -> s.map(f -> f.getMethodName()).collect(Collectors.toList()))
+
+// System processes.
+ProcessBuilder proc = new ProcessBuilder();
+Process p = proc.command(List.of("ls", "-laH", "/tmp")).start();
+String s = new String( p.getInputStream().readAllBytes());
+System.out.println(s)
+
+ProcessHandle.current().info().commandLine()
+ProcessHandle.current().info().arguments().get()
+
+ProcessHandle.current().pid()
+
+ProcessHandle.allProcesses().filter(p -> p.info().user().get().equals("marco")).map(p -> p.info().command()).forEach(oc -> oc.ifPresent(System.out::println))
+
+new ProcessBuilder().command("sleep", "3").start().toHandle().onExit().thenAccept(System.out::println)
+
+// HTTP 2 Client
+HttpClient client = HttpClient().newHttpClient()
+HttpRequest request = HttpRequest.newBuilder().uri(new URI("http://localhost:8080")).GET().build()
+
+HttpResponse reponse = client.send(request, BodyHandler.asString())
+response.statusCode()
+response.body()
+
+CompletableFuture<HttpResponse<String>> response = client.sendAsync(request, BodyHandler.asString())
+response.get().body()
+```
