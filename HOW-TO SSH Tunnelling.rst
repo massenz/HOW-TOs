@@ -80,3 +80,29 @@ Upon connecting, it is the **private** key that certifies that the user that is 
 (Derived from this `Linux Problem`_)
 
 .. _Linux Problem: http://linuxproblem.org/art_9.html
+
+
+ssh-agent notes
+---------------
+
+https://www.ssh.com/ssh/agent
+
+The ssh-agent is a helper program that keeps track of user's identity keys and their passphrases. The agent can then use the keys to log into other servers without having the user type in a password or passphrase again. 
+
+To check if already activated:
+echo SSH Agent PID: ${SSH_AGENT_PID}, ${SSH_AGENT_SOCK}
+
+On MacOS:
+echo $SSH_AUTH_SOCK 
+/private/tmp/com.apple.launchd.KIKTS1mWy6/Listeners
+
+
+If run without arguments, adds the default files:
+ ~/.ssh/id_rsa, .ssh/id_dsa, ~/.ssh/id_ecdsa, ~/.ssh/id_ed25519, ~/.ssh/identity
+
+
+__ssh-add__
+
+If the key being added has a passphrase, ssh-add will run the ssh-askpass program to obtain the passphrase from the user. If the SSH_ASKPASS environment variable is set, the program given by that environment variable is used instead.
+
+
