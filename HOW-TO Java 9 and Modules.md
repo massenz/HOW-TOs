@@ -126,9 +126,85 @@ Use the `update-alternatives` command (see `sudo update-alternatives --help`):
     Java(TM) SE Runtime Environment (build 1.8.0_151-b12)
     Java HotSpot(TM) 64-Bit Server VM (build 25.151-b12, mixed mode)
 
-## Running multiple JDKs on MacOS
+## Running OpenJDK 10 on MacOS
 
-    TODO: describe the process
+Download from [here](http://jdk.java.net/10/)
+
+Install it here:
+
+    /Library/Java/JavaVirtualMachines 
+
+Script (note the weird directory structure - this may cause failures)
+
+    VERSION=10.0.2
+    DOWNLOAD_URL=“download.java.net/java/GA/jdk10”
+    JDK=“openjdk-${VERSION}_osx-x64_bin.tar.gz”
+    INSTALL_DIR=“/Library/Java/JavaVirtualMachines“
+
+    wget https://${DOWNLOAD_URL}/${VERSION}/19aef61b38124481863b1413dce1855f/13/${JDK} -O /tmp/${JDK}
+    sudo tar xfz /tmp/${JDK} -C ${INSTALL_DIR}
+
+
+Useful tools:
+
+    /usr/libexec/java_home -V
+    /usr/libexec/java_home -v ${version}
+
+### Java aliases
+    alias javals='/usr/libexec/java_home -V 2>&1 | grep -E "\d.\d.\d(_\d\d)?" | cut -d , -f 1 | colrm 1 4 | grep -v Home'
+    alias j8='export JAVA_HOME=$(jhome 1.8)'
+    alias j9='export JAVA_HOME=$(jhome 9)'
+    alias j10='export JAVA_HOME=$(jhome 10)'
+
+### Locating the JAVA_HOME for a specific version.
+
+    function jhome {
+        local version=${1:-} 
+        if [[ -n ${version} ]]
+        then
+            java_home=$(/usr/libexec/java_home -v ${version}) 
+            if [[ $? == 0 ]]
+            then
+                echo ${java_home}
+                return 0
+            fi
+            return 1
+        fi
+        echo $(/usr/libexec/java_home)
+    }
+
+[GitHub Gist](https://gist.github.com/massenz/faff155523a50313be6f25a5b631a63d)
+
+[Migrating to OpenJDK 11](https://medium.com/criciumadev/its-time-migrating-to-java-11-5eb3868354f9)
+
+Areas to look into:
+- Lombok
+- PowerMock
+- Jacoco
+
+## JVM Tuning Flags
+(see screenshots)
+
+    -XX:+UseG1GC   optimal for user-facing processes
+    -XX:+UseConcMarkSweepGC
+
+String de-dup improves size of heap up to 10%
+
+Hotspot compiler runs for 15,000 iterations (default, tunable) to optimize code
+
+Tools:
+
+- TODO: learn moer about `runq` (and `sar`)
+- `jinfo`
+- `jstat  -gcutil` (but not very useful for G1GC) 
+
+look for GCT (GC time) and YGTC v. total time (first col `timestamp`) and figure out ratio (% time spent GC) should < 1%
+
+`-Xmx`  is the important tuning for OOM
+“as small as possible, as big as necessary”
+
+In most cases, using “defaults” is usually a bad situation
+(see slide for printing out the defaults)
 
 
 # Migrating apps to Modules
