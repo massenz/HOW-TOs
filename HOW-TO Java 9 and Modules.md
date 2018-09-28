@@ -132,7 +132,7 @@ Download from [here](http://jdk.java.net/10/)
 
 Install it here:
 
-    /Library/Java/JavaVirtualMachines 
+    /Library/Java/JavaVirtualMachines
 
 Script (note the weird directory structure - this may cause failures)
 
@@ -159,10 +159,10 @@ Useful tools:
 ### Locating the JAVA_HOME for a specific version.
 
     function jhome {
-        local version=${1:-} 
+        local version=${1:-}
         if [[ -n ${version} ]]
         then
-            java_home=$(/usr/libexec/java_home -v ${version}) 
+            java_home=$(/usr/libexec/java_home -v ${version})
             if [[ $? == 0 ]]
             then
                 echo ${java_home}
@@ -183,28 +183,43 @@ Areas to look into:
 - Jacoco
 
 ## JVM Tuning Flags
-(see screenshots)
+
+### Understand the Memory Model
+
+![Memory Model](jvm-slides/Memory-Model.png)
+
+### Memory tuning options
+
+![-Xmx T-shirt Sizes](jvm-slides/MemorySizes.png)
 
     -XX:+UseG1GC   optimal for user-facing processes
     -XX:+UseConcMarkSweepGC
 
 String de-dup improves size of heap up to 10%
-
 Hotspot compiler runs for 15,000 iterations (default, tunable) to optimize code
 
-Tools:
+![G1GC AddOns](jvm-slides/G1GC-AddOns.png)
+
+### Tools:
+
+![JVM Tools](jvm-slides/JVMTuningTools.png)
 
 - TODO: learn moer about `runq` (and `sar`)
 - `jinfo`
-- `jstat  -gcutil` (but not very useful for G1GC) 
+- `jstat  -gcutil` (but not very useful for G1GC)
 
 look for GCT (GC time) and YGTC v. total time (first col `timestamp`) and figure out ratio (% time spent GC) should < 1%
 
 `-Xmx`  is the important tuning for OOM
 “as small as possible, as big as necessary”
 
+![Offline Options](jvm-slides/Offline-Options.png)
+
 In most cases, using “defaults” is usually a bad situation
 (see slide for printing out the defaults)
+
+![Print Default Options](jvm-slides/PrintTuningOptions.png)
+
 
 
 # Migrating apps to Modules
