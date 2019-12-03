@@ -15,16 +15,11 @@ Related - to unmount a stale handle:
 
 ## Solution
 
-
 The mount point is not `exported`.
 Find out where the mount point points to on the client side:
 
-    $ cat /etc/fstab
-    # /etc/fstab: static file system information.
-    ...
-    # Backup disk on 1TB external USB drive - no auto mount
+    $ cat /etc/fstab | grep /mnt/backup
     beregond:/share/USBDisk1 /mnt/backup       nfs    defaults,users,noexec,noauto    0       0
-
 
 On the server side:
 
@@ -44,9 +39,10 @@ As you can see, `/share/external/sdt1/` is not there, edit the file and add the 
 
 Then use (this is the **critical** part):
 
+    [~] # exportfs -ua
     [~] # exportfs -a
 
-You'll get a bunch of error messages:
+You may get a bunch of error messages:
 
     exportfs: /etc/exports [5]: Neither 'subtree_check' or 'no_subtree_check' specified for export "*:/share/external/sdt1".
     Assuming default behaviour ('no_subtree_check').
@@ -54,7 +50,7 @@ You'll get a bunch of error messages:
 
 but that's fine, they can be ignored.
 
-Finally:
+Finally, on the client:
 
     $ mount /mnt/backup
 
