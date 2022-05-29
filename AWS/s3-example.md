@@ -5,7 +5,7 @@ Demonstrates the code that generates a configuration file and uploads to S3, pri
 The `docs/s3-example.ipynb` can be run interactively using Jupyter, with:
 
     $ jupyter notebook
-    
+
 and opening it in the browser at `http://localhost:8888`.
 
 ## Rendered output
@@ -33,7 +33,7 @@ bucket_names = []
 if 'Buckets' in response:
     for bucket in response['Buckets']:
         bucket_names.append(bucket['Name'])
-        
+
 print(bucket_names)
 ```
 
@@ -77,7 +77,7 @@ filename = '{cluster}.xml'.format(cluster=CLUSTER)
 template = jinja_env.get_template('cluster.xml')
 
 prefix = 'node'
-domain = 'aws.itunes.apple.com'
+domain = 'example.com'
 nodes = 7
 
 render = template.render(
@@ -92,44 +92,40 @@ render = template.render(
 tmpfile = os.path.join('/tmp', filename)
 with open(tmpfile, 'wt') as dest:
     dest.write(render)
-    
+
 print(render[:900], ' ...', '\n\nSaved at:', tmpfile)
 ```
 
     <!-- Voldemort Cluster configuration file
-         Created 2017-06-29, M. Massenzio (mmassenzio@apple.com)
-    
+
          Cluster: userdetails-aws
          Configuration file rendered at Thu Jun 29 17:00:21 2017
-         Deployed in Hosted Zone: aws.itunes.apple.com
          Nodes: 7
          Partitions per node: 4
-    
-         For more info see: https://github.pie.apple.com/its-infra/pegasus
-      -->
-    
+    -->
+
     <cluster>
         <name>userdetails-aws</name>
-        
+
         <server>
             <id>0</id>
-            <host>node0.userdetails-aws.aws.itunes.apple.com</host>
+            <host>node0.exmaple.com</host>
             <http-port>8081</http-port>
             <socket-port>6666</socket-port>
             <partitions>0,7,14,21</partitions>
         </server>
-        
+
         <server>
             <id>1</id>
-            <host>node1.userdetails-aws.aws.itunes.apple.com</host>
+            <host>node1.example.com</host>
             <http-port>8081</http-port>
             <socket-port>6666</socket-port>
             <partitions>1,8,15,22</partitions>
         </server>
-        
+
         <server>
-          ... 
-    
+          ...
+
     Saved at: /tmp/userdetails-aws.xml
 
 
@@ -138,11 +134,11 @@ print(render[:900], ' ...', '\n\nSaved at:', tmpfile)
 def ProgressCallable(object):
     def __init__(self, filename):
         self.filename = filename
-        
+
     def __call__(self, bytescount):
         print("{} uploaded: {}".format(self.filename, bytescount))
 
-        
+
 bucket.upload_file(Filename=tmpfile, Key='cluster.xml', Callback=ProgressCallable(filename))
 ```
 
@@ -173,7 +169,7 @@ for ff in ['stores.xml', 'server.properties']:
 uploaded_files = []
 for obj in bucket.objects.all():
     uploaded_files.append(obj.key)
-    
+
 for ff in ['stores.xml', 'server.properties', 'cluster.xml']:
     assert ff in uploaded_files
 ```

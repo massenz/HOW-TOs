@@ -15,7 +15,5 @@ https://requests-oauthlib.readthedocs.io/en/latest/oauth2_workflow.html
 
 Example Redirect URI:
 
-https://github.pie.apple.com/its-infra/pegasus?code=3b67281bd07f2dab54e7&state=PWRAlN993OdGoW3Dhp8kJ6snAR8ggM 
-
 See full implementation (including flask-login) here:
 https://gist.github.com/massenz/963dab69b7ef9cde2045c30775c9f5fb
